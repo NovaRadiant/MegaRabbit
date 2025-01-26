@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega Rabbit Clicker Extreme</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-title {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #start-screen {
+            text-align: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #start-button {
+            padding: 18px 36px;
+            font-size: 1.8em;
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        #start-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(255,170,0,0.3);
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+            display: none;
+            margin-top: 20px; /* Prevent overlap */
+        }
+
+        #stats {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            font-size: 1.4em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 0 20px;
+        }
+
+        .stat-item {
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        #megarabbit {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            transition: all 0.8s ease-in-out; /* Slower movement */
+            filter: drop-shadow(0 8px 16px rgba(255,215,0,0.3));
+        }
+
+        .danger {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            display: none;
+            transition: all 0.4s ease;
+        }
+
+        #bomb {
+            filter: drop-shadow(0 4px 8px rgba(255,0,0,0.3));
+        }
+
+        #time-bonus {
+            filter: drop-shadow(0 4px 8px rgba(0,255,0,0.3));
+        }
+
+        #game-over-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+            display: none;
+            animation: gameOverEnter 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gameOverEnter {
+            0% { opacity: 0; transform: translate(-50%, -40%); }
+            100% { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .game-over-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .restart-button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(255,170,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <h1 class="game-title">MEGA RABBIT CLICKER</h1>
+        <button id="start-button">START APOCALYPSE</button>
+    </div>
+
+    <div id="game-container">
+        <div id="stats">
+            <div class="stat-item" id="carrots">🥕 0</div>
+            <div class="stat-item" id="lives">❤️ 3</div>
+            <div class="stat-item" id="timer">⏳ 30s</div>
+        </div>
+        <img src="megarabbit.png" alt="Mega Rabbit" id="megarabbit">
+        <img src="bomb.png" alt="Bomb" class="danger" id="bomb">
+        <img src="clock.png" alt="Time Bonus" class="danger" id="time-bonus">
+    </div>
+
+    <div id="game-over-screen">
+        <h2 class="game-over-title">RABBITPOCALYPSE!</h2>
+        <p>Your final carrot stash:</p>
+        <p id="final-score">🥕 0</p>
+        <button class="restart-button" onclick="restartGame()">TRY AGAIN</button>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // ===== Game State =====
+        let gameActive = false;
+        let carrots = 0;
+        let lives = 3;
+        let timeLeft = 30;
+        let moveTimer;
+        let gameTimer;
+
+        // ===== DOM Elements =====
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+        const megaRabbit = document.getElementById('megarabbit');
+        const bomb = document.getElementById('bomb');
+        const timeBonus = document.getElementById('time-bonus');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const backgroundMusic = document.getElementById('background-music');
+
+        // ===== Game Initialization =====
+        document.getElementById('start-button').addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
+            initializeGame();
+            backgroundMusic.play().catch(error => {
+                console.log('Audio playback prevented:', error);
+            });
+        });
+
+        function initializeGame() {
+            gameActive = true;
+            carrots = 0;
+            lives = 3;
+            timeLeft = 30;
+            
+            updateUI();
+            megaRabbit.style.display = 'block';
+            moveRabbit();
+            startGameLoop();
+        }
+
+        // ===== Core Game Loop =====
+        function moveRabbit() {
+            if (!gameActive) return;
+
+            const moveDuration = 800; // Slower movement (800ms)
+            const maxX = gameContainer.offsetWidth - 120;
+            const maxY = gameContainer.offsetHeight - 120;
+            
+            megaRabbit.style.transition = `left ${moveDuration}ms ease-in-out, top ${moveDuration}ms ease-in-out`;
+            megaRabbit.style.left = `${Math.random() * maxX}px`;
+            megaRabbit.style.top = `${Math.random() * maxY}px`;
+
+            moveTimer = setTimeout(moveRabbit, 1100 ); // Slower reappearance (1.2 seconds)
+        }
+
+        // ===== Game Events =====
+        megaRabbit.addEventListener('click', () => {
+            if (!gameActive) return;
+            carrots++;
+            animateRabbit();
+            updateUI();
+        });
+
+        gameContainer.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            if (e.target === gameContainer) {
+                lives = Math.max(0, lives - 1);
+                if (lives <= 0) endGame();
+                updateUI();
+            }
+        });
+
+        bomb.addEventListener('click', () => {
+            carrots = Math.max(0, carrots - 5);
+            bomb.style.display = 'none';
+            updateUI();
+        });
+
+        timeBonus.addEventListener('click', () => {
+            timeLeft += 4;
+            timeBonus.style.display = 'none';
+            updateUI();
+        });
+
+        // ===== Game Systems =====
+        function startGameLoop() {
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                updateUI();
+                
+                // Spawn random events
+                if (Math.random() < 0.35) spawnBomb(); // Increased bomb spawn rate
+                if (Math.random() < 0.15) spawnTimeBonus();
+
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function spawnBomb() {
+            const x = Math.random() * (gameContainer.offsetWidth - bomb.offsetWidth);
+            const y = Math.random() * (gameContainer.offsetHeight - bomb.offsetHeight);
+            bomb.style.left = `${x}px`;
+            bomb.style.top = `${y}px`;
+            bomb.style.display = 'block';
+            setTimeout(() => bomb.style.display = 'none', 2000);
+        }
+
+        function spawnTimeBonus() {
+            const x = Math.random() * (gameContainer.offsetWidth - timeBonus.offsetWidth);
+            const y = Math.random() * (gameContainer.offsetHeight - timeBonus.offsetHeight);
+            timeBonus.style.left = `${x}px`;
+            timeBonus.style.top = `${y}px`;
+            timeBonus.style.display = 'block';
+            setTimeout(() => timeBonus.style.display = 'none', 1500);
+        }
+
+        // ===== UI Management =====
+        function updateUI() {
+            document.getElementById('carrots').textContent = `🥕 ${carrots}`;
+            document.getElementById('lives').textContent = `❤️ ${lives}`;
+            document.getElementById('timer').textContent = `⏳ ${timeLeft}s`;
+        }
+
+        function animateRabbit() {
+            megaRabbit.style.transform = 'scale(1.2)';
+            setTimeout(() => megaRabbit.style.transform = 'scale(1)', 150);
+        }
+
+        // ===== Game Over =====
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            clearTimeout(moveTimer);
+            document.getElementById('final-score').textContent = `🥕 ${carrots}`;
+            gameContainer.style.display = 'none';
+            gameOverScreen.style.display = 'block';
+        }
+
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.play();
+        }
+    </script>
+</body>
+</html>
